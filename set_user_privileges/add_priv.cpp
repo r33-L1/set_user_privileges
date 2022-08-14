@@ -3,7 +3,6 @@
 #include <sddl.h>
 
 #include <string>
-#include <codecvt>
 #include <vector>
 #include <iostream>
 
@@ -12,8 +11,7 @@ int win_error(const char* message) {
     return 1;
 }
 
-void InitLsaString(PLSA_UNICODE_STRING lsaStr, LPWSTR str)
-{
+void InitLsaString(PLSA_UNICODE_STRING lsaStr, LPWSTR str) {
     if (str == NULL) {
         lsaStr->Buffer = NULL;
         lsaStr->Length = 0;
@@ -27,8 +25,7 @@ void InitLsaString(PLSA_UNICODE_STRING lsaStr, LPWSTR str)
     lsaStr->MaximumLength = (USHORT)(l + 1) * sizeof(WCHAR);
 }
 
-void CheckRetVal(NTSTATUS res, ULONG okRetVal = ERROR_SUCCESS)
-{
+void CheckRetVal(NTSTATUS res, ULONG okRetVal = ERROR_SUCCESS) {
     ULONG err = LsaNtStatusToWinError(res);
     if (err != ERROR_SUCCESS && err != okRetVal) {
         std::cout << err;
@@ -36,8 +33,7 @@ void CheckRetVal(NTSTATUS res, ULONG okRetVal = ERROR_SUCCESS)
     }
 }
 
-LSA_HANDLE OpenPolicy(DWORD accessMask)
-{
+LSA_HANDLE OpenPolicy(DWORD accessMask) {
     LSA_OBJECT_ATTRIBUTES objectAttributes;
     ZeroMemory(&objectAttributes, sizeof(objectAttributes));
     LSA_UNICODE_STRING lsaMachineName;
@@ -49,8 +45,7 @@ LSA_HANDLE OpenPolicy(DWORD accessMask)
     return hPolicy;
 }
 
-void GetSid(PSID sid, LPDWORD pSidSize, LPCWSTR accountName)
-{
+void GetSid(PSID sid, LPDWORD pSidSize, LPCWSTR accountName) {
     SID_NAME_USE use;
     WCHAR referencedDomainName[1024];
     DWORD cchReferencedDomainName = sizeof(referencedDomainName) / sizeof(WCHAR);
@@ -60,8 +55,7 @@ void GetSid(PSID sid, LPDWORD pSidSize, LPCWSTR accountName)
     }
 }
 
-std::vector<std::wstring> GetPrivileges(PSID sid)
-{
+std::vector<std::wstring> GetPrivileges(PSID sid) {
     LSA_HANDLE hPolicy = OpenPolicy(POLICY_LOOKUP_NAMES);
     if (NULL == hPolicy)
         std::cout << "Error opening policy handle" << std::endl;
@@ -103,8 +97,7 @@ std::vector<std::wstring> GetPrivileges(PSID sid)
     }
 }
 
-void GrantPrivilege(PSID sid, LPCWSTR userRight)
-{
+void GrantPrivilege(PSID sid, LPCWSTR userRight) {
     LSA_HANDLE hPolicy = OpenPolicy(POLICY_LOOKUP_NAMES | POLICY_CREATE_ACCOUNT);
 
     try
@@ -122,8 +115,7 @@ void GrantPrivilege(PSID sid, LPCWSTR userRight)
     }
 }
 
-void RevokePrivilege(PSID sid, LPCWSTR userRight)
-{
+void RevokePrivilege(PSID sid, LPCWSTR userRight) {
     LSA_HANDLE hPolicy = OpenPolicy(POLICY_LOOKUP_NAMES);
 
     try
@@ -227,7 +219,16 @@ int main(int argc, char* argv[]) {
     if (add) {
         GrantPrivilege(sid, wprivilege.c_str());
         std::cout << "[+] Assigned " << wprivilege.c_str() << " to user " << name << std::endl;
+        return 0;
     }
     
+    if (revoke) {
+        RevokePrivilege(sid, wprivilege.c_str());
+        std::cout << "[+] Revoked " << wprivilege.c_str() << " from user " << name << std::endl;
+        return 0;
+    }
+
+    else
+        return 1;
 
 }
